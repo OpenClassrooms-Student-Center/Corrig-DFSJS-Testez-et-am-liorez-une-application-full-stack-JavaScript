@@ -1,12 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import request from 'supertest';
-import app from '../../src/app';
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import prisma from '../../src/prisma';
 import * as bcrypt from 'bcrypt';
+import { startTestServer, stopTestServer } from '../helpers/test-server';
 
 const mockPrisma = vi.mocked(prisma);
 
+let baseUrl: string;
+
 describe('Auth Routes', () => {
+  beforeAll(async () => {
+    baseUrl = await startTestServer();
+  });
+
+  afterAll(async () => {
+    await stopTestServer();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -25,21 +34,31 @@ describe('Auth Routes', () => {
         updatedAt: new Date(),
       });
 
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({ email: 'new@test.com', password: 'password123', firstName: 'Jane', lastName: 'Doe' });
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'new@test.com',
+          password: 'password123',
+          firstName: 'Jane',
+          lastName: 'Doe',
+        }),
+      });
+      const body = await response.json();
 
-      expect(res.status).toBe(201);
-      expect(res.body).toHaveProperty('token');
-      expect(res.body.email).toBe('new@test.com');
+      expect(response.status).toBe(201);
+      expect(body).toHaveProperty('token');
+      expect(body.email).toBe('new@test.com');
     });
 
     it('should return 400 for invalid registration data', async () => {
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({ email: 'invalid', password: '123' });
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'invalid', password: '123' }),
+      });
 
-      expect(res.status).toBe(400);
+      expect(response.status).toBe(400);
     });
   });
 
@@ -57,31 +76,39 @@ describe('Auth Routes', () => {
         updatedAt: new Date(),
       });
 
-      const res = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'test@test.com', password: 'password123' });
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@test.com', password: 'password123' }),
+      });
+      const body = await response.json();
 
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('token');
+      expect(response.status).toBe(200);
+      expect(body).toHaveProperty('token');
     });
 
     it('should return 401 for invalid credentials', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      const res = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'wrong@test.com', password: 'password123' });
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'wrong@test.com', password: 'password123' }),
+      });
+      const body = await response.json();
 
-      expect(res.status).toBe(401);
-      expect(res.body.message).toBe('Invalid credentials');
+      expect(response.status).toBe(401);
+      expect(body.message).toBe('Invalid credentials');
     });
 
     it('should return 400 for missing fields', async () => {
-      const res = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'test@test.com' });
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@test.com' }),
+      });
 
-      expect(res.status).toBe(400);
+      expect(response.status).toBe(400);
     });
   });
 });

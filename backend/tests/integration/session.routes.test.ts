@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import request from 'supertest';
-import app from '../../src/app';
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import prisma from '../../src/prisma';
 import { generateToken } from '../../src/utils/jwt.util';
+import { startTestServer, stopTestServer } from '../helpers/test-server';
 
 const mockPrisma = vi.mocked(prisma);
 
@@ -21,7 +20,17 @@ const mockSession = {
   participants: [],
 };
 
+let baseUrl: string;
+
 describe('Session Routes', () => {
+  beforeAll(async () => {
+    baseUrl = await startTestServer();
+  });
+
+  afterAll(async () => {
+    await stopTestServer();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -30,17 +39,19 @@ describe('Session Routes', () => {
     it('should return sessions when authenticated', async () => {
       mockPrisma.session.findMany.mockResolvedValue([mockSession]);
 
-      const res = await request(app)
-        .get('/api/session')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}/api/session`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await response.json();
 
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveLength(1);
+      expect(response.status).toBe(200);
+      expect(body).toHaveLength(1);
     });
 
     it('should return 401 when not authenticated', async () => {
-      const res = await request(app).get('/api/session');
-      expect(res.status).toBe(401);
+      const response = await fetch(`${baseUrl}/api/session`);
+
+      expect(response.status).toBe(401);
     });
   });
 
@@ -48,22 +59,23 @@ describe('Session Routes', () => {
     it('should return a session by id', async () => {
       mockPrisma.session.findUnique.mockResolvedValue(mockSession);
 
-      const res = await request(app)
-        .get('/api/session/1')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}/api/session/1`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await response.json();
 
-      expect(res.status).toBe(200);
-      expect(res.body.name).toBe('Yoga Vinyasa');
+      expect(response.status).toBe(200);
+      expect(body.name).toBe('Yoga Vinyasa');
     });
 
     it('should return 404 when session not found', async () => {
       mockPrisma.session.findUnique.mockResolvedValue(null);
 
-      const res = await request(app)
-        .get('/api/session/999')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}/api/session/999`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      expect(res.status).toBe(404);
+      expect(response.status).toBe(404);
     });
   });
 
@@ -73,21 +85,29 @@ describe('Session Routes', () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockSession.teacher);
       mockPrisma.session.create.mockResolvedValue(mockSession);
 
-      const res = await request(app)
-        .post('/api/session')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'New Session', date: '2026-03-01', description: 'A new session', teacherId: 1 });
+      const response = await fetch(`${baseUrl}/api/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: 'New Session', date: '2026-03-01', description: 'A new session', teacherId: 1 }),
+      });
 
-      expect(res.status).toBe(201);
+      expect(response.status).toBe(201);
     });
 
     it('should return 400 for invalid session data', async () => {
-      const res = await request(app)
-        .post('/api/session')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'AB' });
+      const response = await fetch(`${baseUrl}/api/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: 'AB' }),
+      });
 
-      expect(res.status).toBe(400);
+      expect(response.status).toBe(400);
     });
   });
 
@@ -97,12 +117,16 @@ describe('Session Routes', () => {
       mockPrisma.session.findUnique.mockResolvedValue(mockSession);
       mockPrisma.session.update.mockResolvedValue({ ...mockSession, name: 'Updated' });
 
-      const res = await request(app)
-        .put('/api/session/1')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Updated Session' });
+      const response = await fetch(`${baseUrl}/api/session/1`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: 'Updated Session' }),
+      });
 
-      expect(res.status).toBe(200);
+      expect(response.status).toBe(200);
     });
   });
 
@@ -112,11 +136,12 @@ describe('Session Routes', () => {
       mockPrisma.session.findUnique.mockResolvedValue(mockSession);
       mockPrisma.session.delete.mockResolvedValue(mockSession);
 
-      const res = await request(app)
-        .delete('/api/session/1')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}/api/session/1`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      expect(res.status).toBe(200);
+      expect(response.status).toBe(200);
     });
   });
 });

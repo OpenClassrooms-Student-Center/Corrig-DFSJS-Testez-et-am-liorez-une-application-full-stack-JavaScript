@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import request from 'supertest';
-import app from '../../src/app';
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import prisma from '../../src/prisma';
 import { generateToken } from '../../src/utils/jwt.util';
+import { startTestServer, stopTestServer } from '../helpers/test-server';
 
 const mockPrisma = vi.mocked(prisma);
 
@@ -16,7 +15,17 @@ const mockTeacher = {
   updatedAt: new Date(),
 };
 
+let baseUrl: string;
+
 describe('Teacher Routes', () => {
+  beforeAll(async () => {
+    baseUrl = await startTestServer();
+  });
+
+  afterAll(async () => {
+    await stopTestServer();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -25,17 +34,19 @@ describe('Teacher Routes', () => {
     it('should return teachers when authenticated', async () => {
       mockPrisma.teacher.findMany.mockResolvedValue([mockTeacher]);
 
-      const res = await request(app)
-        .get('/api/teacher')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}/api/teacher`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await response.json();
 
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveLength(1);
+      expect(response.status).toBe(200);
+      expect(body).toHaveLength(1);
     });
 
     it('should return 401 when not authenticated', async () => {
-      const res = await request(app).get('/api/teacher');
-      expect(res.status).toBe(401);
+      const response = await fetch(`${baseUrl}/api/teacher`);
+
+      expect(response.status).toBe(401);
     });
   });
 
@@ -43,11 +54,11 @@ describe('Teacher Routes', () => {
     it('should return 404 when teacher not found', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      const res = await request(app)
-        .get('/api/teacher/999')
-        .set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}/api/teacher/999`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      expect(res.status).toBe(404);
+      expect(response.status).toBe(404);
     });
   });
 });

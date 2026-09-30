@@ -22,8 +22,8 @@ const renderLogin = () => render(
   </BrowserRouter>,
 );
 
-const getEmailInput = () => screen.getByRole('textbox') as HTMLInputElement;
-const getPasswordInput = () => document.querySelector('input[type="password"]') as HTMLInputElement;
+const getEmailInput = () => screen.getByLabelText('Email') as HTMLInputElement;
+const getPasswordInput = () => screen.getByLabelText('Password') as HTMLInputElement;
 const getSubmitButton = () => screen.getByRole('button', { name: /login|loading/i });
 
 describe('Login Page', () => {
@@ -35,8 +35,8 @@ describe('Login Page', () => {
     renderLogin();
 
     expect(screen.getByText('Login to Yoga Studio')).toBeInTheDocument();
-    expect(screen.getByText('Email')).toBeInTheDocument();
-    expect(screen.getByText('Password')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
   });
 

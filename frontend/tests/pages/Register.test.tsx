@@ -22,7 +22,7 @@ const renderRegister = () => render(
   </BrowserRouter>,
 );
 
-const getInput = (name: string) => document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+const getInput = (label: string) => screen.getByLabelText(label) as HTMLInputElement;
 
 describe('Register Page', () => {
   beforeEach(() => {
@@ -33,16 +33,16 @@ describe('Register Page', () => {
     renderRegister();
 
     expect(screen.getByText('Register for Yoga Studio')).toBeInTheDocument();
-    expect(screen.getByText('First Name')).toBeInTheDocument();
-    expect(screen.getByText('Last Name')).toBeInTheDocument();
-    expect(screen.getByText('Email')).toBeInTheDocument();
-    expect(screen.getByText('Password')).toBeInTheDocument();
+    expect(screen.getByLabelText('First Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Last Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
 
   it('should update form fields on change', () => {
     renderRegister();
 
-    const firstNameInput = getInput('firstName');
+    const firstNameInput = getInput('First Name');
     fireEvent.change(firstNameInput, { target: { value: 'Jane', name: 'firstName' } });
     expect(firstNameInput.value).toBe('Jane');
   });
@@ -52,10 +52,10 @@ describe('Register Page', () => {
 
     renderRegister();
 
-    fireEvent.change(getInput('firstName'), { target: { value: 'Jane', name: 'firstName' } });
-    fireEvent.change(getInput('lastName'), { target: { value: 'Doe', name: 'lastName' } });
-    fireEvent.change(getInput('email'), { target: { value: 'jane@test.com', name: 'email' } });
-    fireEvent.change(getInput('password'), { target: { value: 'password123', name: 'password' } });
+    fireEvent.change(getInput('First Name'), { target: { value: 'Jane', name: 'firstName' } });
+    fireEvent.change(getInput('Last Name'), { target: { value: 'Doe', name: 'lastName' } });
+    fireEvent.change(getInput('Email'), { target: { value: 'jane@test.com', name: 'email' } });
+    fireEvent.change(getInput('Password'), { target: { value: 'password123', name: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /register/i }));
 
     await waitFor(() => {
@@ -70,10 +70,10 @@ describe('Register Page', () => {
 
     renderRegister();
 
-    fireEvent.change(getInput('firstName'), { target: { value: 'Jane', name: 'firstName' } });
-    fireEvent.change(getInput('lastName'), { target: { value: 'Doe', name: 'lastName' } });
-    fireEvent.change(getInput('email'), { target: { value: 'existing@test.com', name: 'email' } });
-    fireEvent.change(getInput('password'), { target: { value: 'password123', name: 'password' } });
+    fireEvent.change(getInput('First Name'), { target: { value: 'Jane', name: 'firstName' } });
+    fireEvent.change(getInput('Last Name'), { target: { value: 'Doe', name: 'lastName' } });
+    fireEvent.change(getInput('Email'), { target: { value: 'existing@test.com', name: 'email' } });
+    fireEvent.change(getInput('Password'), { target: { value: 'password123', name: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /register/i }));
 
     await waitFor(() => {

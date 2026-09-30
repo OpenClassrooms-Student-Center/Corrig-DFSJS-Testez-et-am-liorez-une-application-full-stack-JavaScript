@@ -27,11 +27,9 @@ Liste complète de toutes les dépendances utilisées dans l'application Yoga St
   "@types/express": "^4.17.21",       // Types TypeScript pour Express
   "@types/jsonwebtoken": "^9.0.6",    // Types TypeScript pour JWT
   "@types/node": "^22.5.0",           // Types TypeScript pour Node.js
-  "@types/supertest": "latest",       // Types TypeScript pour supertest
   "@vitest/coverage-v8": "latest",    // Fournisseur de couverture V8 pour Vitest
   "nodemon": "^3.1.4",                // Redémarrage automatique lors des changements de fichiers
   "prisma": "^5.20.0",                // CLI Prisma pour les migrations
-  "supertest": "latest",              // Bibliothèque d'assertion HTTP pour les tests d'intégration
   "ts-node": "^10.9.2",               // Exécution TypeScript pour Node.js
   "typescript": "^5.5.4",             // Compilateur TypeScript
   "vitest": "latest"                  // Framework de test
@@ -55,6 +53,7 @@ Liste complète de toutes les dépendances utilisées dans l'application Yoga St
 
 ```json
 {
+  "@playwright/test": "^1.56.0",             // Framework de test E2E (navigateur réel)
   "@testing-library/jest-dom": "latest",     // Matchers personnalisés pour les tests DOM
   "@testing-library/react": "latest",        // Utilitaires de test de composants React
   "@testing-library/user-event": "latest",   // Simulation d'interactions utilisateur
@@ -63,7 +62,6 @@ Liste complète de toutes les dépendances utilisées dans l'application Yoga St
   "@vitejs/plugin-react": "^4.3.1",          // Plugin Vite pour React
   "@vitest/coverage-v8": "latest",           // Fournisseur de couverture V8 pour Vitest
   "autoprefixer": "^10.4.20",               // Plugin PostCSS pour les préfixes vendor
-  "cypress": "latest",                       // Framework de test E2E
   "jsdom": "latest",                         // Implémentation DOM pour les tests
   "postcss": "^8.4.47",                      // Outil de transformation CSS
   "tailwindcss": "^4.0.0",                  // Framework CSS utilitaire
@@ -111,8 +109,10 @@ npm install
 |---------|---------|
 | vitest | Exécuteur de tests et bibliothèque d'assertion |
 | @vitest/coverage-v8 | Couverture de code avec le moteur V8 |
-| supertest | Test des endpoints HTTP |
-| @types/supertest | Types TypeScript pour supertest |
+
+Aucune dépendance HTTP supplémentaire n'est nécessaire : les tests d'intégration
+appellent l'API avec la fonction `fetch` native de Node 18+, via le helper
+`backend/tests/helpers/test-server.ts`.
 
 ### Tests Frontend
 | Package | Objectif |
@@ -123,7 +123,7 @@ npm install
 | @testing-library/react | Rendu de composants React |
 | @testing-library/jest-dom | Matchers d'assertion DOM |
 | @testing-library/user-event | Simulation d'interactions utilisateur |
-| cypress | Tests E2E dans le navigateur |
+| @playwright/test | Tests E2E dans le navigateur |
 
 ## Résumé de la Stack Technologique
 
@@ -139,7 +139,7 @@ npm install
 | bcrypt | 5.x | Hachage de mots de passe |
 | Zod | 3.x | Validation |
 | Vitest | latest | Tests |
-| Supertest | latest | Tests HTTP |
+| fetch natif | Node 18+ | Tests HTTP d'intégration |
 
 ### Frontend
 | Technologie | Version | Objectif |
@@ -152,7 +152,7 @@ npm install
 | Axios | 1.x | Client HTTP |
 | Vitest | latest | Tests |
 | Testing Library | latest | Tests de composants |
-| Cypress | latest | Tests E2E |
+| Playwright | 1.56+ | Tests E2E |
 
 ## Compatibilité
 
@@ -163,7 +163,7 @@ npm install
 | React | >=18.0.0 | >=5.0.0 |
 | Vite | >=18.0.0 | >=5.0.0 |
 | Vitest | >=18.0.0 | >=5.0.0 |
-| Cypress | >=18.0.0 | >=5.0.0 |
+| Playwright | >=18.0.0 | >=5.0.0 |
 
 ## Commandes Utiles
 

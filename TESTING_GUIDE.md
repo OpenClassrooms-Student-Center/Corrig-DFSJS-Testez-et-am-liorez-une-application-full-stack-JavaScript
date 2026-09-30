@@ -7,10 +7,10 @@ Documentation complète pour la suite de tests du Studio de Yoga.
 | Outil | Objectif | Emplacement |
 |------|---------|----------|
 | Vitest | Tests unitaires + d'intégration backend | `backend/tests/` |
-| Supertest | Tests des endpoints HTTP | `backend/tests/integration/` |
+| fetch natif (Node 18+) | Tests des endpoints HTTP | `backend/tests/integration/` |
 | Vitest | Tests unitaires + de composants frontend | `frontend/tests/` |
 | Testing Library | Rendu des composants React | `frontend/tests/` |
-| Cypress | Tests E2E navigateur | `frontend/cypress/` |
+| Playwright | Tests E2E navigateur | `frontend/e2e/` |
 
 ## Exécution des Tests
 
@@ -48,19 +48,19 @@ npm run test:coverage
 npm run test -- tests/pages/Login.test.tsx
 ```
 
-### Tests E2E (Cypress)
+### Tests E2E (Playwright)
 ```bash
-# Prerequisites: backend + frontend must be running
+# Prerequisites: backend must be running
 # Terminal 1: cd backend && npm run dev
-# Terminal 2: cd frontend && npm run dev
+# Le frontend est demarre automatiquement par Playwright (option webServer)
 
 cd frontend
 
-# Open Cypress GUI
-npx cypress open
+# Open Playwright UI mode
+npm run test:e2e:ui
 
 # Run headless
-npx cypress run
+npm run test:e2e
 ```
 
 ---
@@ -145,7 +145,7 @@ npx cypress run
 
 ### Tests d'Intégration (20 tests)
 
-Les tests d'intégration utilisent Supertest contre l'application Express avec Prisma mocké.
+Les tests d'intégration appellent l'API avec la fonction `fetch` native de Node 18+. Le helper `tests/helpers/test-server.ts` démarre l'application Express sur un port libre choisi par le système (`startTestServer()`) et la referme en fin de suite (`stopTestServer()`). Prisma reste mocké : aucune base de données réelle n'est nécessaire.
 
 #### Routes Auth (`tests/integration/auth.routes.test.ts`) - 5 tests
 | Test | Description |
@@ -295,44 +295,47 @@ Les tests d'intégration utilisent Supertest contre l'application Express avec P
 
 ### Configuration
 
-**`frontend/cypress.config.ts`:**
+**`frontend/playwright.config.ts`:**
 - URL de base : `http://localhost:3000`
-- Pattern de spec : `cypress/e2e/**/*.cy.ts`
-- Viewport : 1280x720
-- `allowCypressEnv: false`
+- Répertoire des specs : `./e2e` (fichiers `*.spec.ts`)
+- Projet unique : `chromium` (Desktop Chrome)
+- `fullyParallel: false` et `workers: 1` : les specs partagent la base de données backend et certains scénarios se suivent
+- `webServer` : lance `npm run dev` et réutilise un serveur déjà démarré hors CI
+- `trace: 'on-first-retry'`, `retries: 2` en CI
 
-**Commandes Personnalisées (`cypress/support/commands.ts`):**
-- `cy.login(email, password)` - Login API + configuration localStorage
-- `cy.register(firstName, lastName, email, password)` - Inscription API
+**Helpers Partagés (`e2e/helpers.ts`):**
+- `login(page, email, password)` - POST /auth/login puis injection du token dans localStorage
+- `register(page, firstName, lastName, email, password)` - POST /auth/register puis injection de la session
+- `acceptConfirmDialogs(page)` - accepte automatiquement les `window.confirm()`
 
-### Tests Auth (`cypress/e2e/auth.cy.ts`) - 9 tests
+### Tests Auth (`e2e/auth.spec.ts`) - 9 tests
 | Test | Description |
 |------|-------------|
-| should display login page | Le formulaire s'affiche correctement |
+| should display login form | Le formulaire s'affiche correctement |
 | should login with valid credentials | Connexion admin réussit |
 | should show error with invalid credentials | Mauvais mot de passe affiche une erreur |
-| should navigate to register | La navigation par lien fonctionne |
-| should display register page | Le formulaire d'inscription s'affiche |
-| should register new user | Création d'un nouveau compte |
-| should navigate to login from register | La navigation par lien fonctionne |
-| should redirect unauthenticated users | Route protégée -> /login |
-| should logout | Logout vide la session |
+| should navigate to register page | La navigation par lien fonctionne |
+| should display registration form | Le formulaire d'inscription s'affiche |
+| should register a new user | Création d'un nouveau compte |
+| should navigate to login page | La navigation par lien fonctionne |
+| should redirect unauthenticated users to login | Route protégée -> /login |
+| should logout successfully | Logout vide la session |
 
-### Tests Session (`cypress/e2e/sessions.cy.ts`) - 10 tests
+### Tests Session (`e2e/sessions.spec.ts`) - 10 tests
 | Test | Description |
 |------|-------------|
 | should display sessions list | Cartes visibles avec données |
 | should view session details | Page de détail se charge |
 | should join a session | Participation réussit |
 | should leave a session | Désinscription réussit |
-| should not show create button for non-admin | Utilisateur régulier restreint |
-| should show create button for admin | Admin voit Create |
+| should not show create session button for non-admin | Utilisateur régulier restreint |
+| should show create session button | Admin voit Create |
 | should create a new session | Soumission du formulaire fonctionne |
 | should edit a session | Formulaire d'édition + soumission |
 | should delete a session | Carte supprimée |
-| should show delete button on cards | Admin voit Delete |
+| should show delete button on session cards | Admin voit Delete |
 
-### Tests Profile (`cypress/e2e/profile.cy.ts`) - 8 tests
+### Tests Profile (`e2e/profile.spec.ts`) - 8 tests
 | Test | Description |
 |------|-------------|
 | should display user information | Nom, email visibles |
@@ -342,7 +345,7 @@ Les tests d'intégration utilisent Supertest contre l'application Express avec P
 | should show Administrator badge | Badge admin visible |
 | should display admin email | Email visible |
 | should delete account with confirmation | Flux de suppression de compte |
-| should redirect after account deletion | Page de connexion après suppression |
+| should redirect to login after account deletion | Page de connexion après suppression |
 
 ---
 
@@ -373,7 +376,7 @@ Tests Unitaires (37)
 └── Tester les utilitaires en isolation (JWT)
 
 Tests d'Intégration (20)
-├── Utiliser supertest contre l'application Express
+├── Appeler l'API avec fetch natif (Express écoute sur un port libre)
 ├── Prisma toujours mocké (pas de vraie DB nécessaire)
 ├── Tester le cycle complet requête/réponse
 └── Vérifier les codes de statut, corps de réponse, gestion d'erreurs
@@ -389,9 +392,9 @@ Tests Unitaires (45)
 └── Affirmer l'état du DOM et les appels mockés
 
 Tests E2E (27)
-├── Navigateur réel (Cypress)
-├── Backend + frontend réels en cours d'exécution
-├── cy.login() personnalisé pour configuration auth rapide
+├── Navigateur réel (Playwright + Chromium)
+├── Backend réel lancé à la main, frontend démarré par Playwright
+├── Helper login() partagé pour configuration auth rapide
 ├── Tester les parcours utilisateur complets
 └── Vérifier l'état de l'UI et la navigation
 ```
@@ -421,13 +424,43 @@ vi.mock('react-router-dom', async () => {
 });
 ```
 
-**Commandes Personnalisées Cypress:**
+**Helpers Playwright (`e2e/helpers.ts`):**
 ```typescript
-Cypress.Commands.add('login', (email, password) => {
-  cy.request('POST', 'http://localhost:8080/api/auth/login', { email, password })
-    .then((response) => {
-      window.localStorage.setItem('token', response.body.token);
-      window.localStorage.setItem('user', JSON.stringify(response.body));
-    });
+const seedSession = async (page: Page, auth: AuthResponse): Promise<void> => {
+  await page.addInitScript(
+    ({ token, user }) => {
+      window.localStorage.setItem('token', token);
+      window.localStorage.setItem('user', user);
+    },
+    { token: auth.token, user: JSON.stringify(auth) }
+  );
+};
+
+export const login = async (page: Page, email: string, password: string): Promise<AuthResponse> => {
+  const response = await page.request.post(`${API_URL}/auth/login`, {
+    data: { email, password },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`Login failed for ${email} (HTTP ${response.status()})`);
+  }
+
+  const auth = (await response.json()) as AuthResponse;
+  await seedSession(page, auth);
+  return auth;
+};
+```
+
+**Appel HTTP en Test d'Intégration (Backend):**
+```typescript
+const baseUrl = await startTestServer();
+
+const response = await fetch(`${baseUrl}/api/auth/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password }),
 });
+const body = await response.json();
+
+expect(response.status).toBe(200);
 ```

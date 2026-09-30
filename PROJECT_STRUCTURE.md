@@ -73,6 +73,8 @@ p4-dfsjs-starter/
 │   │
 │   └── tests/
 │       ├── setup.ts                    # Mock Prisma global
+│       ├── helpers/
+│       │   └── test-server.ts          # startTestServer/stopTestServer (port libre)
 │       ├── unit/
 │       │   ├── utils/
 │       │   │   └── jwt.util.test.ts
@@ -96,7 +98,7 @@ p4-dfsjs-starter/
     ├── vite.config.ts             # Configuration Vite + config tests
     ├── tailwind.config.js         # Configuration TailwindCSS
     ├── index.html                 # Point d'entrée HTML
-    ├── cypress.config.ts          # Configuration E2E Cypress
+    ├── playwright.config.ts       # Configuration E2E Playwright
     │
     ├── src/
     │   ├── main.tsx               # Point d'entrée React
@@ -145,36 +147,32 @@ p4-dfsjs-starter/
     │       ├── SessionDetail.test.tsx
     │       └── Profile.test.tsx
     │
-    └── cypress/
-        ├── tsconfig.json          # Configuration TypeScript Cypress
-        ├── support/
-        │   ├── e2e.ts             # Fichier de support
-        │   └── commands.ts        # Commandes personnalisées (cy.login, cy.register)
-        └── e2e/
-            ├── auth.cy.ts         # Tests E2E d'authentification
-            ├── sessions.cy.ts     # Tests E2E de gestion des sessions
-            └── profile.cy.ts      # Tests E2E de profil
+    └── e2e/
+        ├── helpers.ts             # Helpers partagés (login, register, acceptConfirmDialogs)
+        ├── auth.spec.ts           # Tests E2E d'authentification
+        ├── sessions.spec.ts       # Tests E2E de gestion des sessions
+        └── profile.spec.ts        # Tests E2E de profil
 ```
 
 ## Résumé du Nombre de Fichiers
 
-### Backend (41 fichiers)
+### Backend (44 fichiers)
 - **Source :** 24 fichiers (app, prisma, types, errors, controllers, services, repositories, middleware, dto, utils, routes)
-- **Tests :** 11 fichiers (setup + 6 unitaires + 4 intégration)
-- **Config :** 4 fichiers (package.json, tsconfig, nodemon, vitest.config)
+- **Tests :** 12 fichiers (setup + helper de serveur de test + 6 unitaires + 4 intégration)
+- **Config :** 6 fichiers (package.json, tsconfig, nodemon, vitest.config, .env, .env.example)
 - **Prisma :** 2 fichiers (schema, seed)
 
-### Frontend (33 fichiers)
-- **Source :** 18 fichiers (app, pages, components, hooks, services, types)
+### Frontend (40 fichiers)
+- **Source :** 19 fichiers (app, pages, components, hooks, services, types)
 - **Tests :** 10 fichiers (setup + 9 fichiers de test)
-- **Cypress :** 6 fichiers (config, tsconfig, support, specs)
+- **Playwright :** 5 fichiers (playwright.config.ts, e2e/helpers.ts, 3 specs)
 - **Config :** 6 fichiers (package.json, tsconfig, vite, tailwind, index.html)
 
-### Niveau Racine (8+ fichiers)
+### Niveau Racine (9 fichiers)
 - Documentation : 7 fichiers markdown
 - Config : docker-compose.yml, .gitignore
 
-**Total :** ~83 fichiers source (hors node_modules, dist, coverage)
+**Total :** 93 fichiers source (hors node_modules, dist, coverage)
 
 ## Décisions d'Architecture Clés
 

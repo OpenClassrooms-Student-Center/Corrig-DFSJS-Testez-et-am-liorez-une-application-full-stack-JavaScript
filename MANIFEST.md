@@ -19,7 +19,7 @@
 - `VERIFICATION.md` - Liste de vérification
 - `DEPENDENCIES.md` - Liste complète des dépendances
 
-### Fichiers de Configuration (16)
+### Fichiers de Configuration (15)
 - `.gitignore` - Règles d'exclusion Git
 - `docker-compose.yml` - Conteneur PostgreSQL
 - `backend/package.json` - Dépendances backend
@@ -34,10 +34,9 @@
 - `frontend/vite.config.ts` - Configuration Vite (inclut la config des tests)
 - `frontend/tailwind.config.js` - Configuration TailwindCSS
 - `frontend/index.html` - Point d'entrée HTML
-- `frontend/cypress.config.ts` - Configuration Cypress E2E
-- `frontend/cypress/tsconfig.json` - Configuration TypeScript Cypress
+- `frontend/playwright.config.ts` - Configuration Playwright E2E
 
-### Fichiers Source Backend (28)
+### Fichiers Source Backend (26)
 - `backend/src/app.ts` - Point d'entrée de l'application Express
 - `backend/src/prisma.ts` - **NOUVEAU** Instance Singleton PrismaClient
 - `backend/src/types/index.ts` - **NOUVEAU** Définitions de types centrales (JwtPayload, AuthRequest, DTOs)
@@ -65,8 +64,9 @@
 - `backend/prisma/schema.prisma` - Schéma de base de données
 - `backend/prisma/seed.ts` - Script de peuplement de la base de données
 
-### Fichiers de Tests Backend (11)
+### Fichiers de Tests Backend (12)
 - `backend/tests/setup.ts` - Mock Prisma global
+- `backend/tests/helpers/test-server.ts` - startTestServer() / stopTestServer() sur un port libre
 - `backend/tests/unit/utils/jwt.util.test.ts` - 4 tests
 - `backend/tests/unit/middleware/auth.middleware.test.ts` - 4 tests
 - `backend/tests/unit/services/auth.service.test.ts` - 6 tests
@@ -78,7 +78,7 @@
 - `backend/tests/integration/teacher.routes.test.ts` - 3 tests
 - `backend/tests/integration/user.routes.test.ts` - 4 tests
 
-### Fichiers Source Frontend (20)
+### Fichiers Source Frontend (19)
 - `frontend/src/main.tsx` - Point d'entrée React
 - `frontend/src/App.tsx` - Composant App avec routage (utilise ProtectedRoute)
 - `frontend/src/index.css` - Styles globaux
@@ -111,14 +111,13 @@
 - `frontend/tests/pages/SessionDetail.test.tsx` - 6 tests
 - `frontend/tests/pages/Profile.test.tsx` - 6 tests
 
-### Fichiers Cypress E2E (5)
-- `frontend/cypress/support/commands.ts` - cy.login() / cy.register() personnalisés
-- `frontend/cypress/support/e2e.ts` - Fichier de support
-- `frontend/cypress/e2e/auth.cy.ts` - 9 tests
-- `frontend/cypress/e2e/sessions.cy.ts` - 10 tests
-- `frontend/cypress/e2e/profile.cy.ts` - 8 tests
+### Fichiers Playwright E2E (4)
+- `frontend/e2e/helpers.ts` - Helpers login() / register() / acceptConfirmDialogs()
+- `frontend/e2e/auth.spec.ts` - 9 tests
+- `frontend/e2e/sessions.spec.ts` - 10 tests
+- `frontend/e2e/profile.spec.ts` - 8 tests
 
-**Total des Fichiers Source :** 83 fichiers (hors node_modules, coverage, lock files)
+**Total des Fichiers Source :** 93 fichiers (hors node_modules, coverage, lock files)
 
 ---
 
@@ -136,7 +135,7 @@
 | `backend/src/repositories/*.ts` (4) | Couche repository |
 | `backend/src/services/*.ts` (4) | Couche service |
 | `backend/vitest.config.ts` | Configuration des tests backend |
-| `backend/tests/**/*.test.ts` (11) | 57 tests backend |
+| `backend/tests/**` (12) | 57 tests backend + helper de serveur de test |
 | `frontend/src/components/ProtectedRoute.tsx` | Garde de route typé |
 | `frontend/src/hooks/useAuth.ts` | Hook d'authentification |
 | `frontend/src/services/session.service.ts` | Module API sessions |
@@ -144,8 +143,8 @@
 | `frontend/src/services/user.service.ts` | Module API utilisateurs |
 | `frontend/src/vite-env.d.ts` | Déclarations de types Vite |
 | `frontend/tests/**/*.test.{ts,tsx}` (10) | 45 tests frontend |
-| `frontend/cypress/**` (5) | 27 tests E2E |
-| `frontend/cypress.config.ts` | Configuration Cypress |
+| `frontend/e2e/**` (4) | 27 tests E2E + helpers |
+| `frontend/playwright.config.ts` | Configuration Playwright |
 
 ### Fichiers Modifiés (20)
 | Fichier | Changements |
@@ -261,7 +260,7 @@
 | bcrypt | 5.x | Hachage de mots de passe |
 | Zod | 3.x | Validation |
 | Vitest | latest | Framework de tests |
-| Supertest | latest | Tests HTTP |
+| fetch natif | Node 18+ | Tests HTTP d'intégration |
 
 ### Frontend
 | Technologie | Version | Objectif |
@@ -274,7 +273,7 @@
 | Axios | 1.x | Client HTTP |
 | Vitest | latest | Framework de tests |
 | Testing Library | latest | Tests de composants |
-| Cypress | latest | Tests E2E |
+| Playwright | 1.56+ | Tests E2E |
 
 ### Infrastructure
 | Technologie | Version | Objectif |
@@ -348,8 +347,8 @@ cd backend && npm test
 # Tests frontend
 cd frontend && npm test
 
-# Tests E2E (nécessite les serveurs en cours d'exécution)
-cd frontend && npx cypress open
+# Tests E2E (nécessite le backend en cours d'exécution ; Playwright démarre le frontend)
+cd frontend && npm run test:e2e:ui
 ```
 
 ### Points d'Accès
@@ -388,5 +387,5 @@ cd frontend && npx cypress open
 2. **Frontend compile** : `cd frontend && npx tsc --noEmit` (zéro erreur, zéro `any`)
 3. **Tests backend** : `cd backend && npm test` (57 tests passent)
 4. **Tests frontend** : `cd frontend && npm test` (45 tests passent)
-5. **Tests E2E** : Démarrer les serveurs, puis `cd frontend && npx cypress run` (27 tests passent)
+5. **Tests E2E** : Démarrer le backend, puis `cd frontend && npm run test:e2e` (27 tests passent)
 6. **Application fonctionne** : Connexion, parcourir les sessions, rejoindre/quitter, créer/modifier/supprimer en tant qu'admin

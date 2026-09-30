@@ -133,7 +133,7 @@ cd backend && npm test
 - [ ] `teacher.service.test.ts` - 4 tests réussis
 - [ ] `user.service.test.ts` - 7 tests réussis
 
-**Tests d'intégration (20) :**
+**Tests d'intégration (20)**, via `fetch` natif et le helper `tests/helpers/test-server.ts` **:**
 - [ ] `auth.routes.test.ts` - 5 tests réussis
 - [ ] `session.routes.test.ts` - 8 tests réussis
 - [ ] `teacher.routes.test.ts` - 3 tests réussis
@@ -160,17 +160,17 @@ cd frontend && npm test
 
 ### Tests E2E
 ```bash
-# Start servers first
-cd frontend && npx cypress run
+# Start the backend first (Playwright starts the frontend itself)
+cd frontend && npm run test:e2e
 ```
 
 - [ ] 27 tests réussis
 - [ ] 0 échecs
 
 **Specs :**
-- [ ] `auth.cy.ts` - 9 tests réussis
-- [ ] `sessions.cy.ts` - 10 tests réussis
-- [ ] `profile.cy.ts` - 8 tests réussis
+- [ ] `e2e/auth.spec.ts` - 9 tests réussis
+- [ ] `e2e/sessions.spec.ts` - 10 tests réussis
+- [ ] `e2e/profile.spec.ts` - 8 tests réussis
 
 ### Couverture
 ```bash
